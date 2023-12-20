@@ -15,15 +15,15 @@ class HomeFragment : Fragment() {
 
     // This property is only valid between onCreateView and
     // onDestroyView.
-    private val binding get() = _binding!!
+    //private val binding get() = _binding!!
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val homeViewModel = ViewModelProvider(this)[HomeViewModel::class.java]
 
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+        val root: View = _binding!!.root
 
-        val textView: TextView = binding.textHome
+        val textView: TextView = _binding!!.textHome
         homeViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }

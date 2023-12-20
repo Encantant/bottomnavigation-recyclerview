@@ -23,21 +23,23 @@ import info.fandroid.navkotlin.UserActionListener
 import info.fandroid.navkotlin.UsersAdapter
 import info.fandroid.navkotlin.databinding.ActivityMainBinding
 import info.fandroid.navkotlin.databinding.FragmentDashboardBinding
+import info.fandroid.navkotlin.databinding.FragmentHomeBinding
 import info.fandroid.navkotlin.model.User
+import info.fandroid.navkotlin.model.UsersListener
 import info.fandroid.navkotlin.model.UsersService
 import java.util.Collections
 
 class DashboardFragment : Fragment() {
 
-    private lateinit var binding: FragmentDashboardBinding
+    private var binding: FragmentDashboardBinding? = null
     private lateinit var adapter: UsersAdapter
 
-    private val usersService: UsersService get() = (applicationContext as App).usersService
+    private val usersService: UsersService get() = (requireContext().applicationContext as App).usersService
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = FragmentDashboardBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        //binding = FragmentDashboardBinding.inflate(layoutInflater)
+        binding = FragmentDashboardBinding.inflate(inflater, container, false)
+        //setContentView(binding.root)
         var columnsCount = 2
 
         val touchHelper = ItemTouchHelper(
@@ -61,7 +63,7 @@ class DashboardFragment : Fragment() {
                             usersService.deleteUserStrict(pos)
                             //usersService.deleteUser(usersService.getUser(pos))
                             adapter.notifyItemRemoved(pos)
-                            Snackbar.make(binding.recyclerView,u.name, Snackbar.LENGTH_LONG)
+                            Snackbar.make(binding!!.recyclerView,u.name, Snackbar.LENGTH_LONG)
                                 .setAction("Undo", View.OnClickListener {
                                     usersService.addUser(uID, u)//u.id,u.name,u.company,u.photo,u.isLiked)
                                     adapter.notifyItemInserted(pos)
@@ -97,7 +99,7 @@ class DashboardFragment : Fragment() {
                         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
                         return
                     }
-                    val deleteDrawable = ContextCompat.getDrawable(this@DashboardFragment, R.drawable.ic_delete_black_24dp);
+                    val deleteDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_delete_black_24dp);
                     val intrinsicWidth = deleteDrawable!!.getIntrinsicWidth();
                     val intrinsicHeight = deleteDrawable.getIntrinsicHeight();
                     val mBackground = ColorDrawable()
@@ -117,7 +119,7 @@ class DashboardFragment : Fragment() {
             }
         )
 
-        touchHelper.attachToRecyclerView(binding.recyclerView)
+        touchHelper.attachToRecyclerView(binding!!.recyclerView)
 
         adapter = UsersAdapter(object : UserActionListener {
             override fun onUserMove(user: User, moveBy: Int) {
@@ -129,7 +131,7 @@ class DashboardFragment : Fragment() {
             }
 
             override fun onUserDetails(user: User) {
-                Toast.makeText(this@DashboardFragment, "User: ${user.name}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "User: ${user.name}", Toast.LENGTH_SHORT).show()
             }
 
             override fun onPersonLike(user: User) {
@@ -137,19 +139,26 @@ class DashboardFragment : Fragment() {
             }
         })
 
-        val layoutManager = GridLayoutManager(this,columnsCount)
+        val layoutManager = GridLayoutManager(requireContext(),columnsCount)
         //val imgLike = findViewById<ImageView>(R.id.likedImageView)
         //imgLike.isVisible= false
 
-        binding.recyclerView.layoutManager = layoutManager
-        binding.recyclerView.adapter = adapter
+        binding!!.recyclerView.layoutManager = layoutManager
+        binding!!.recyclerView.adapter = adapter
 
         usersService.addListener(usersListener)
+
+        return binding!!.root
     }
 
     override fun onDestroy() {
         super.onDestroy()
         usersService.removeListener(usersListener)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding = null
     }
 
     private val usersListener: UsersListener = {
